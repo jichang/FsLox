@@ -1,2 +1,2 @@
 # FsLox
-Crafting Interperters with FSharp
+[Crafting Interperters](http://www.craftinginterpreters.com/) with FSharp
