@@ -1,8 +1,7 @@
-({})
-,.;
-+-*
-=!=<<=>>=/
-//comment
-"string"
-123456
-ident var let trait class true false if else while for return
+let a = 1
+let b = a + 1
+let c = a + 2
+if b < c then
+  b
+else
+  c

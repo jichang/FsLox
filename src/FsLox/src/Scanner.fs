@@ -36,6 +36,7 @@ module Scanner =
         | TRAIT
         | CLASS
         | IF
+        | THEN
         | ELSE
         | TRUE
         | FALSE
@@ -76,7 +77,7 @@ module Scanner =
         let charsLength = Seq.length chars
         let nextChar = if charsLength = leftStr.Length then ' ' else leftStr.Chars(charsLength)
         if nextChar = ' ' || nextChar = '\n' then
-            Some { lineNum = line.num; lineOffset = charsLength - 1 }
+            Some { lineNum = line.num; lineOffset = line.peek + charsLength - 1 }
         else
             None
 
@@ -525,6 +526,12 @@ module Scanner =
                                 }
                             | "if" ->
                                 { ``type`` = IF
+                                  lexeme = lexeme
+                                  startPosition = startPosition
+                                  endPosition = endPosition
+                                }
+                            | "then" ->
+                                { ``type`` = THEN
                                   lexeme = lexeme
                                   startPosition = startPosition
                                   endPosition = endPosition
