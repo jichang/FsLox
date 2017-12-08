@@ -5,14 +5,22 @@ open System.IO
 open FsLox
 open FsLox.Scanner
 
+let omitSpaces tokens =
+    Seq.filter (fun token -> token.``type`` <> WHITESPACE) tokens
+
 [<EntryPoint>]
 let main argv =
     let filePath = argv.[0]
     let absFilePath = Path.Combine (Environment.CurrentDirectory, filePath)
-    match Scanner.scan absFilePath with
+    let scanRes = Scanner.scan absFilePath
+    match scanRes with
     | Ok (tokens, _) ->
-        let lexemes = Seq.map (fun (token: Token) -> printfn "%A" token; token.lexeme) tokens
-        printfn "%A" (String.concat "" lexemes)
+        match Parser.parse (tokens |> omitSpaces) Seq.empty with
+        | Ok ast ->
+            let value = Interpreter.interprete Map.empty ast
+            printfn "%A" value
+        | Error error ->
+            printfn "%A" error
     | Error error ->
         printfn "%A" error
 

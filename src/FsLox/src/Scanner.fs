@@ -13,9 +13,9 @@ module Scanner =
         | DOT
         | MINUS
         | PLUS
-        | SEMICOLON
         | MULTPLY
         | WHITESPACE
+        | SEMICOLON
         | NEWLINE
         | SLASH
         | COMMENT
@@ -30,6 +30,7 @@ module Scanner =
         // Literals
         | STRING
         | NUMBER
+        | BOOLEAN
         | IDENTIFIER
         // Keywords
         | LET
@@ -38,8 +39,6 @@ module Scanner =
         | IF
         | THEN
         | ELSE
-        | TRUE
-        | FALSE
         | FOR
         | RETURN
         | WHILE
@@ -69,14 +68,14 @@ module Scanner =
         c >= '0' && c <= '9'
 
     let extractNumber line =
-        let leftStr = line.content.Substring line.offset
+        let leftStr = line.content.Substring line.peek
         let chars =
             leftStr.ToCharArray ()
             |> Seq.ofArray
             |> Seq.takeWhile (fun ch -> isDigit ch || ch = '.')
         let charsLength = Seq.length chars
         let nextChar = if charsLength = leftStr.Length then ' ' else leftStr.Chars(charsLength)
-        if nextChar = ' ' || nextChar = '\n' then
+        if nextChar = ' ' || nextChar = '\n' || nextChar = ';' then
             Some { lineNum = line.num; lineOffset = line.peek + charsLength - 1 }
         else
             None
@@ -95,7 +94,6 @@ module Scanner =
 
     let slice lines startPosition endPosition =
         let cut str line =
-            printfn "%A %A" startPosition endPosition
             if startPosition.lineNum = endPosition.lineNum then
                 if line.num = startPosition.lineNum then
                     str + line.content.[startPosition.lineOffset..endPosition.lineOffset]
@@ -138,7 +136,7 @@ module Scanner =
             |> snd
 
     let update (n, lines) line =
-        if n < 0 then
+        if n <= 0 then
             (n, Seq.append lines [line])
         else
             let remainingLength = line.content.Length - line.peek
@@ -475,114 +473,113 @@ module Scanner =
                     advance remainingLines token.lexeme.Length
                     |> Seq.filter isEnd
                 Some (token, updateRemainingLines)
-            | Some (c, targetLine) ->
-                if isDigit c then
-                    let startPosition =
-                        { lineNum = targetLine.num
-                          lineOffset = targetLine.peek }
-                    let endPosition = extractNumber targetLine
-                    match endPosition with
-                    | Some endPosition ->
-                        let lexeme = slice remainingLines startPosition endPosition
-                        let token =
-                            { ``type`` = NUMBER
+            | Some (c, targetLine) when isDigit c ->
+                let startPosition =
+                    { lineNum = targetLine.num
+                      lineOffset = targetLine.peek }
+                let endPosition = extractNumber targetLine
+                match endPosition with
+                | Some endPosition ->
+                    let lexeme = slice remainingLines startPosition endPosition
+                    let token =
+                        { ``type`` = NUMBER
+                          lexeme = lexeme
+                          startPosition = startPosition
+                          endPosition = endPosition }
+                    let updateRemainingLines =
+                        advance remainingLines lexeme.Length
+                        |> Seq.filter isEnd
+                    Some (token, updateRemainingLines)
+                | None -> None
+            | Some (_, targetLine) ->
+                let startPosition =
+                    { lineNum = targetLine.num
+                      lineOffset = targetLine.peek }
+                let searchRemainingLines = advance remainingLines 1
+                let sepPosition = Seq.fold (search [|';'; ' '; '\n'|]) None searchRemainingLines
+                match sepPosition with
+                | Some sepPosition ->
+                    let endPosition = {sepPosition with lineOffset = sepPosition.lineOffset - 1}
+                    let lexeme = slice remainingLines startPosition endPosition
+                    let token =
+                        match lexeme with
+                        | "let" ->
+                            { ``type`` = LET
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "trait" ->
+                            { ``type`` = TRAIT
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "class" ->
+                            { ``type`` = CLASS
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "if" ->
+                            { ``type`` = IF
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "then" ->
+                            { ``type`` = THEN
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "else" ->
+                            { ``type`` = ELSE
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "for" ->
+                            { ``type`` = FOR
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "return" ->
+                            { ``type`` = RETURN
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "while" ->
+                            { ``type`` = WHILE
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "true" ->
+                            { ``type`` = BOOLEAN
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | "false" ->
+                            { ``type`` = BOOLEAN
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
+                        | _ ->
+                            { ``type`` = IDENTIFIER
                               lexeme = lexeme
                               startPosition = startPosition
                               endPosition = endPosition }
-                        let updateRemainingLines =
-                            advance remainingLines lexeme.Length
-                            |> Seq.filter isEnd
-                        Some (token, updateRemainingLines)
-                    | None -> None
-                else
-                    let startPosition =
-                        { lineNum = targetLine.num
-                          lineOffset = targetLine.peek }
-                    let searchRemainingLines = advance remainingLines 1
-                    let sepPosition = Seq.fold (search [|' '; '\n'|]) None searchRemainingLines
-                    match sepPosition with
-                    | Some sepPosition ->
-                        let endPosition = {sepPosition with lineOffset = sepPosition.lineOffset - 1}
-                        let lexeme = slice remainingLines startPosition endPosition
-                        let token =
-                            match lexeme with
-                            | "let" ->
-                                { ``type`` = LET
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "trait" ->
-                                { ``type`` = TRAIT
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "class" ->
-                                { ``type`` = CLASS
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "if" ->
-                                { ``type`` = IF
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "then" ->
-                                { ``type`` = THEN
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "else" ->
-                                { ``type`` = ELSE
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "for" ->
-                                { ``type`` = FOR
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "return" ->
-                                { ``type`` = RETURN
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "while" ->
-                                { ``type`` = WHILE
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "true" ->
-                                { ``type`` = TRUE
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | "false" ->
-                                { ``type`` = FALSE
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition
-                                }
-                            | _ ->
-                                { ``type`` = IDENTIFIER
-                                  lexeme = lexeme
-                                  startPosition = startPosition
-                                  endPosition = endPosition }
-                        let updateRemainingLines =
-                            advance remainingLines lexeme.Length
-                            |> Seq.filter isEnd
-                        Some (token, updateRemainingLines)
-                    | None ->
-                        None
+                    let updateRemainingLines =
+                        advance remainingLines lexeme.Length
+                        |> Seq.filter isEnd
+                    Some (token, updateRemainingLines)
+                | None ->
+                    None
             | _ ->
                 let token =
                     { ``type`` = WHITESPACE
