@@ -10,3 +10,13 @@ let d =
         a
     else
         c
+
+e = 0;
+f = 0;
+while e < d do
+    f = f + e
+else
+    f = e
+
+for e = 0; e < c; e = e + 1 do
+    f = 1

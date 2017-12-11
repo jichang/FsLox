@@ -17,6 +17,7 @@ let main argv =
     | Ok (tokens, _) ->
         match Parser.parse (tokens |> omitSpaces) Seq.empty with
         | Ok ast ->
+            Seq.iter (fun expr -> printfn "%A" expr) ast.Exprs
             let value = Interpreter.interprete Map.empty ast
             printfn "%A" value
         | Error error ->

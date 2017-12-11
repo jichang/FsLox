@@ -39,9 +39,10 @@ module Scanner =
         | IF
         | THEN
         | ELSE
-        | FOR
-        | RETURN
         | WHILE
+        | FOR
+        | DO
+        | RETURN
         // End of file
         | EOF
 
@@ -539,20 +540,26 @@ module Scanner =
                               startPosition = startPosition
                               endPosition = endPosition
                             }
+                        | "while" ->
+                            { ``type`` = WHILE
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition
+                            }
                         | "for" ->
                             { ``type`` = FOR
                               lexeme = lexeme
                               startPosition = startPosition
                               endPosition = endPosition
                             }
-                        | "return" ->
-                            { ``type`` = RETURN
+                        | "do" ->
+                            { ``type`` = DO
                               lexeme = lexeme
                               startPosition = startPosition
                               endPosition = endPosition
                             }
-                        | "while" ->
-                            { ``type`` = WHILE
+                        | "return" ->
+                            { ``type`` = RETURN
                               lexeme = lexeme
                               startPosition = startPosition
                               endPosition = endPosition
@@ -621,5 +628,5 @@ module Scanner =
 
     let scan (filePath : string) =
         File.ReadAllLines filePath
-        |> Seq.mapi (fun num content -> { num = num; content = content + "\n"; peek = 0; offset = 0 })
+        |> Seq.mapi (fun num content -> { num = num + 1; content = content + "\n"; peek = 0; offset = 0 })
         |> Seq.fold scanLine (Ok (Seq.empty, Seq.empty))

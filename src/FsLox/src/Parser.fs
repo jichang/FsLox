@@ -1,5 +1,6 @@
 namespace FsLox
 
+open System.Threading.Tasks.Dataflow
 module Parser =
     open FsLox.Scanner
 
@@ -7,6 +8,17 @@ module Parser =
         { conditionExpr: Expr
           thenBranchExpr: Expr
           elseBranchExpr: Expr option }
+    and WhileExpr = 
+        { conditionExpr: Expr
+          loopBranchExpr: Expr
+          elseBranchExpr: Expr option }
+    and ForConditionExpr =
+            { initExpr: Expr
+              checkExpr: Expr
+              endExpr: Expr }
+    and ForExpr = 
+        { conditionExpr: ForConditionExpr
+          loopBranchExpr: Expr }
     and LetExpr =
         { targetExpr: Expr
           sourceExpr: Expr }
@@ -17,9 +29,12 @@ module Parser =
     and Expr =
         | Identifier of Token
         | If of IfExpr
+        | While of IfExpr
+        | For of ForExpr
         | Let of LetExpr
         | Lateral of Token
         | Binary of BinaryExpr
+        | Return
         | Empty
 
     type ParserError =
@@ -103,6 +118,107 @@ module Parser =
                 exprRes
         | _ ->
             Error { Token = firstToken; Message = "first token of if statement must be if" }
+    and parseWhileExpression tokens =
+        let firstToken = Seq.head tokens
+        match firstToken.``type`` with
+        | WHILE ->
+            let tokensAfterWhile = Seq.tail tokens
+            let exprRes = parseExpression tokensAfterWhile
+            match exprRes with
+            | Ok (conditionExpr, tokensAfterConditionExpr) ->
+                let tokensAfterConditionExpr =
+                    tokensAfterConditionExpr
+                    |> Seq.skipWhile (isType NEWLINE)
+                let doToken = Seq.head tokensAfterConditionExpr
+                if doToken.``type`` = DO then
+                    let tokensAfterDo =
+                        Seq.tail tokensAfterConditionExpr
+                        |> Seq.skipWhile (isType NEWLINE)
+                    match parseExpression tokensAfterDo with
+                    | Ok (loopBranchExpr, tokensAfterLoopBranch) ->
+                        let tokensAfterLoopBranch =
+                            tokensAfterLoopBranch
+                            |> Seq.skipWhile (isType NEWLINE)
+                        let elseToken = Seq.head tokensAfterLoopBranch
+                        match elseToken.``type`` with
+                        | ELSE ->
+                            let tokensAfterElse =
+                                Seq.tail tokensAfterLoopBranch
+                                |> Seq.skipWhile (isType NEWLINE)
+                            match parseExpression tokensAfterElse with
+                            | Ok (elseBranchExpr, tokensAfterElseBranch) ->
+                                Ok (While { conditionExpr = conditionExpr; thenBranchExpr = loopBranchExpr; elseBranchExpr = Some elseBranchExpr}, tokensAfterElseBranch)
+                            | _ ->
+                                Error {Token = Seq.head tokensAfterElse; Message = "else branch must has an expression"}
+                        | _ ->
+                            Ok (While { conditionExpr = conditionExpr; thenBranchExpr = loopBranchExpr; elseBranchExpr = None}, tokensAfterLoopBranch)
+                    | _ ->
+                        Error { Token = doToken; Message = "while expression must has a loop expression" }
+                else
+                    Error { Token = doToken; Message = "while expression must has a loop expression" }
+            | _ ->
+                exprRes
+        | _ ->
+            Error { Token = firstToken; Message = "first token of while statement must be while" }
+    and parseForExpression tokens =
+        let firstToken = Seq.head tokens
+        match firstToken.``type`` with
+        | FOR ->
+            let tokensAfterFor = Seq.tail tokens
+            let exprRes = parseExpression tokensAfterFor
+            match exprRes with
+            | Ok (conditionInitExpr, tokensAfterConditionInitExpr) ->
+                let tokensAfterConditionInitExpr =
+                    tokensAfterConditionInitExpr
+                    |> Seq.skipWhile (isType NEWLINE)
+                let semicolonToken = Seq.head tokensAfterConditionInitExpr
+                if semicolonToken.``type`` = SEMICOLON then
+                    let tokensAfterConditionInitExpr =
+                        Seq.tail tokensAfterConditionInitExpr
+                        |> Seq.skipWhile (isType NEWLINE)
+                    match parseExpression tokensAfterConditionInitExpr with
+                    | Ok (conditionCheckExpr, tokensAfterConditionCheckExpr) ->
+                        let tokensAfterConditionCheckExpr =
+                            tokensAfterConditionCheckExpr
+                            |> Seq.skipWhile (isType NEWLINE)
+                        let semicolonToken = Seq.head tokensAfterConditionCheckExpr
+                        if semicolonToken.``type`` = SEMICOLON then
+                            let tokensAfterCheckExpr =
+                                Seq.tail tokensAfterConditionCheckExpr
+                                |> Seq.skipWhile (isType NEWLINE)
+                            match parseExpression tokensAfterCheckExpr with
+                            | Ok (conditionEndExpr, tokensAfterConditionEndExpr) ->
+                                let forConditionExpr =
+                                    { initExpr = conditionInitExpr
+                                      checkExpr = conditionCheckExpr
+                                      endExpr = conditionEndExpr }
+                                let tokensAfterConditionEndExpr =
+                                    tokensAfterConditionEndExpr
+                                    |> Seq.skipWhile (isType NEWLINE)
+                                let doToken = Seq.head tokensAfterConditionEndExpr
+                                if doToken.``type`` = DO then
+                                    let tokensAfterDoExpr =
+                                        Seq.tail tokensAfterConditionEndExpr
+                                        |> Seq.skipWhile (isType NEWLINE)
+                                    match parseExpression tokensAfterDoExpr with
+                                    | Ok (loopBranchExpr, tokensAfterLoopBranch) ->
+                                        Ok (For { conditionExpr = forConditionExpr; loopBranchExpr = loopBranchExpr }, tokensAfterLoopBranch)
+                                    | _ ->
+                                        Error { Token = doToken; Message = "for expression must has a do expression"}
+                                else
+                                    Error { Token = doToken; Message = "for expression must has a do token"}
+                            | _ ->
+                                Error {Token = Seq.head tokensAfterCheckExpr; Message = "for expression must has an end expression"}
+                        else
+                            Error { Token = semicolonToken; Message = "for check expression must has semicolon as seperator" }
+                    | _ ->
+                        Error { Token = Seq.head tokensAfterConditionInitExpr; Message = "for expression must has a check expression" }
+                else
+                    Error { Token = semicolonToken; Message = "for init expression must has semicolon as seperator" }
+            | _ ->
+                exprRes
+        | _ ->
+            Error { Token = firstToken; Message = "first token of for statement must be while" }
     and parseExpression tokens =
         let token = Seq.head tokens
         match token.``type`` with
@@ -110,6 +226,10 @@ module Parser =
             parseIfExpression tokens
         | LET ->
             parseLetExpression tokens
+        | WHILE ->
+            parseWhileExpression tokens
+        | FOR ->
+            parseForExpression tokens
         | IDENTIFIER ->
             let tokensAfterIdentifier = Seq.tail tokens
             let nextToken = Seq.head tokensAfterIdentifier
@@ -132,6 +252,7 @@ module Parser =
                     Error {Token = nextToken; Message = "operator expect a identifier or lateral or binary expression"}
             | NEWLINE
             | THEN
+            | DO
             | SEMICOLON ->
                 Ok (Identifier token, tokensAfterIdentifier)
             | _ ->
@@ -149,7 +270,7 @@ module Parser =
         | SEMICOLON ->
             Ok (Empty, Seq.tail tokens)
         | RETURN ->
-            Ok (Empty, Seq.tail tokens)
+            Ok (Return, Seq.tail tokens)
         | _ ->
             Error { Token = token; Message = "invalid token" }
 
