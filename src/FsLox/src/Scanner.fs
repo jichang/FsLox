@@ -46,8 +46,16 @@ module Scanner =
         // End of file
         | EOF
 
+
+    type Line =
+        { num: int
+          content: string
+          peek: int
+          offset: int }
+
     type Position =
-        { lineNum: int
+        { line: Line
+          lineNum: int
           lineOffset: int }
 
     type Token =
@@ -55,12 +63,6 @@ module Scanner =
           lexeme: string
           startPosition: Position
           endPosition: Position }
-
-    type Line =
-        { num: int
-          content: string
-          peek: int
-          offset: int }
 
     let isPeekEnd line = line.peek < line.content.Length
     let isEnd line = line.offset < line.content.Length
@@ -77,7 +79,9 @@ module Scanner =
         let charsLength = Seq.length chars
         let nextChar = if charsLength = leftStr.Length then ' ' else leftStr.Chars(charsLength)
         if nextChar = ' ' || nextChar = '\n' || nextChar = ';' then
-            Some { lineNum = line.num; lineOffset = line.peek + charsLength - 1 }
+            Some { line = line;
+                   lineNum = line.num;
+                   lineOffset = line.peek + charsLength - 1 }
         else
             None
 
@@ -89,7 +93,8 @@ module Scanner =
             if index = -1 then
                 None
             else
-                Some { lineNum = line.num 
+                Some { line = line;
+                       lineNum = line.num 
                        lineOffset = index + line.peek }
         | _ -> result
 
@@ -173,10 +178,12 @@ module Scanner =
                     { ``type`` = LEFT_PAREN
                       lexeme = "("
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -187,10 +194,12 @@ module Scanner =
                     { ``type`` = RIGHT_PAREN
                       lexeme = ")"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -201,10 +210,12 @@ module Scanner =
                     { ``type`` = LEFT_BRACE
                       lexeme = "{"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -215,10 +226,12 @@ module Scanner =
                     { ``type`` = RIGHT_BRACE
                       lexeme = "}"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -229,10 +242,12 @@ module Scanner =
                     { ``type`` = COMMA
                       lexeme = ","
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -243,10 +258,12 @@ module Scanner =
                     { ``type`` = DOT
                       lexeme = "."
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -257,10 +274,12 @@ module Scanner =
                     { ``type`` = MINUS 
                       lexeme = "-"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -271,10 +290,12 @@ module Scanner =
                     { ``type`` = PLUS
                       lexeme = "+"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -285,10 +306,12 @@ module Scanner =
                     { ``type`` = SEMICOLON
                       lexeme = ";"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -299,10 +322,12 @@ module Scanner =
                     { ``type`` = MULTPLY
                       lexeme = "*"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -313,10 +338,12 @@ module Scanner =
                     { ``type`` = EQUAL
                       lexeme = "="
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -330,19 +357,23 @@ module Scanner =
                         { ``type`` = NOT_EQUAL
                           lexeme = "!="
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 2 } }
                     | _ ->
                         { ``type`` = NOT
                           lexeme = "!"
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -356,19 +387,23 @@ module Scanner =
                         { ``type`` = LESS_EQUAL
                           lexeme = "<="
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 2 } }
                     | _ ->
                         { ``type`` = LESS
                           lexeme = "<"
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -382,19 +417,23 @@ module Scanner =
                         { ``type`` = GREATER_EQUAL
                           lexeme = ">="
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 2 } }
                     | _ ->
                         { ``type`` = GREATER
                           lexeme = ">"
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -408,19 +447,23 @@ module Scanner =
                         { ``type`` = COMMENT
                           lexeme = targetLine.content.Substring targetLine.peek
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.content.Length - 1 } }
                     | _ ->
                         { ``type`` = SLASH
                           lexeme = "/"
                           startPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek }
                           endPosition =
-                              { lineNum = targetLine.num
+                              { line = targetLine
+                                lineNum = targetLine.num
                                 lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -428,7 +471,8 @@ module Scanner =
                 Some (token, updateRemainingLines)
             | Some ('"', targetLine) ->
                 let startPosition =
-                    { lineNum = targetLine.num
+                    { line = targetLine
+                      lineNum = targetLine.num
                       lineOffset = targetLine.peek }
                 let searchRemainingLines = advance remainingLines 1
                 let endPosition = Seq.fold (search [|'"'|]) None searchRemainingLines
@@ -451,10 +495,12 @@ module Scanner =
                     { ``type`` = WHITESPACE
                       lexeme = " "
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -465,10 +511,12 @@ module Scanner =
                     { ``type`` = NEWLINE
                       lexeme = "\n"
                       startPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek }
                       endPosition =
-                          { lineNum = targetLine.num
+                          { line = targetLine
+                            lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
@@ -476,7 +524,8 @@ module Scanner =
                 Some (token, updateRemainingLines)
             | Some (c, targetLine) when isDigit c ->
                 let startPosition =
-                    { lineNum = targetLine.num
+                    { line = targetLine
+                      lineNum = targetLine.num
                       lineOffset = targetLine.peek }
                 let endPosition = extractNumber targetLine
                 match endPosition with
@@ -494,7 +543,8 @@ module Scanner =
                 | None -> None
             | Some (_, targetLine) ->
                 let startPosition =
-                    { lineNum = targetLine.num
+                    { line = targetLine
+                      lineNum = targetLine.num
                       lineOffset = targetLine.peek }
                 let searchRemainingLines = advance remainingLines 1
                 let sepPosition = Seq.fold (search [|';'; ' '; '\n'|]) None searchRemainingLines
@@ -588,19 +638,7 @@ module Scanner =
                 | None ->
                     None
             | _ ->
-                let token =
-                    { ``type`` = WHITESPACE
-                      lexeme = " "
-                      startPosition =
-                          { lineNum = 0
-                            lineOffset = 0 }
-                      endPosition =
-                          { lineNum = 0
-                            lineOffset = 0 } }
-                let updateRemainingLines =
-                    advance remainingLines token.lexeme.Length
-                    |> Seq.filter isEnd
-                Some (token, updateRemainingLines)
+                None
 
         match parseResult with
         | Some (token, updateRemainingLines) ->

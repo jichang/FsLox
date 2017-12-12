@@ -20,3 +20,6 @@ else
 
 for e = 0; e < c; e = e + 1 do
     f = 1
+
+let f a b =
+    a + b

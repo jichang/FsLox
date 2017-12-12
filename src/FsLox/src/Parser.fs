@@ -1,6 +1,5 @@
 namespace FsLox
 
-open System.Threading.Tasks.Dataflow
 module Parser =
     open FsLox.Scanner
 
@@ -46,6 +45,13 @@ module Parser =
 
     let isType typ token =
         token.``type`` = typ
+
+    let consumeToken tokens tokenType message =
+        let token = Seq.head tokens
+        if token.``type`` = tokenType then
+            Ok (Seq.tail tokens)
+        else
+            Error { Token = token; Message = message }
 
     let rec parseLetExpression tokens =
         let firstToken = Seq.head tokens
