@@ -29,6 +29,9 @@ module Parser =
         { name: Expr
           args: Token seq
           body: Expr seq }
+    and ApplyExpr =
+        { func: Token
+          args: Token seq }
     and Expr =
         | Identifier of Token
         | If of IfExpr
@@ -37,6 +40,7 @@ module Parser =
         | Let of LetExpr
         | Lateral of Token
         | Fun of FunExpr
+        | Apply of ApplyExpr
         | Binary of BinaryExpr
         | Return
         | Empty
@@ -83,6 +87,7 @@ module Parser =
                     | Ok (Identifier _ as sourceExpr, tokensAfterSource)
                     | Ok (Lateral _ as sourceExpr, tokensAfterSource)
                     | Ok (Binary _ as sourceExpr, tokensAfterSource)
+                    | Ok (Apply _ as sourceExpr, tokensAfterSource)
                     | Ok (If _ as sourceExpr, tokensAfterSource) ->
                         if Seq.isEmpty argTokens then
                             Ok (Let { targetExpr = targetExpr; sourceExpr = sourceExpr}, tokensAfterSource)
@@ -270,6 +275,14 @@ module Parser =
                     Ok (Binary { operator = nextToken; leftExpr = Identifier token; rightExpr = rightExpr }, leftTokens)
                 | _ ->
                     Error {Token = nextToken; Message = "operator expect a identifier or lateral or binary expression"}
+            | IDENTIFIER ->
+                let argTokens =
+                    tokensAfterIdentifier
+                    |> Seq.takeWhile (isType IDENTIFIER)
+                let tokensAfterArgs =
+                    tokensAfterIdentifier
+                    |> Seq.skipWhile (isType IDENTIFIER)
+                Ok (Apply { func = token; args = argTokens }, tokensAfterArgs)
             | NEWLINE
             | THEN
             | DO

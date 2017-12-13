@@ -21,5 +21,7 @@ else
 for e = 0; e < c; e = e + 1 do
     f = 1
 
-let fun a b =
+let f a b =
     a + b
+
+let sum = f b c
