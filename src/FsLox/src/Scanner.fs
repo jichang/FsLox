@@ -34,8 +34,9 @@ module Scanner =
         | IDENTIFIER
         // Keywords
         | LET
-        | TRAIT
-        | CLASS
+        | TYPE
+        | TYPECLASS
+        | KIND
         | IF
         | THEN
         | ELSE
@@ -560,18 +561,6 @@ module Scanner =
                               startPosition = startPosition
                               endPosition = endPosition
                             }
-                        | "trait" ->
-                            { ``type`` = TRAIT
-                              lexeme = lexeme
-                              startPosition = startPosition
-                              endPosition = endPosition
-                            }
-                        | "class" ->
-                            { ``type`` = CLASS
-                              lexeme = lexeme
-                              startPosition = startPosition
-                              endPosition = endPosition
-                            }
                         | "if" ->
                             { ``type`` = IF
                               lexeme = lexeme
@@ -626,6 +615,16 @@ module Scanner =
                               startPosition = startPosition
                               endPosition = endPosition
                             }
+                        | "type" ->
+                            { ``type`` = TYPE
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition }
+                        | "typeclass" ->
+                            { ``type`` = TYPECLASS
+                              lexeme = lexeme
+                              startPosition = startPosition
+                              endPosition = endPosition }
                         | _ ->
                             { ``type`` = IDENTIFIER
                               lexeme = lexeme

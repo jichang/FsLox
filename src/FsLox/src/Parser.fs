@@ -25,6 +25,10 @@ module Parser =
         { operator: Token
           leftExpr: Expr
           rightExpr: Expr }
+    and FunExpr =
+        { name: Expr
+          args: Token seq
+          body: Expr seq }
     and Expr =
         | Identifier of Token
         | If of IfExpr
@@ -32,6 +36,7 @@ module Parser =
         | For of ForExpr
         | Let of LetExpr
         | Lateral of Token
+        | Fun of FunExpr
         | Binary of BinaryExpr
         | Return
         | Empty
@@ -46,12 +51,12 @@ module Parser =
     let isType typ token =
         token.``type`` = typ
 
-    let consumeToken tokens tokenType message =
+    let consumeToken tokens tokenType =
         let token = Seq.head tokens
         if token.``type`` = tokenType then
             Ok (Seq.tail tokens)
         else
-            Error { Token = token; Message = message }
+            Error token
 
     let rec parseLetExpression tokens =
         let firstToken = Seq.head tokens
@@ -63,17 +68,26 @@ module Parser =
             | IDENTIFIER ->
                 let targetExpr = Identifier identifierToken
                 let tokensAfterTarget = Seq.tail tokensAfterLet
-                let nextToken = Seq.head tokensAfterTarget
+                let argTokens =
+                    tokensAfterTarget
+                    |> Seq.takeWhile (isType IDENTIFIER)
+                let tokensAfterArgs =
+                    tokensAfterTarget
+                    |> Seq.skipWhile (isType IDENTIFIER)
+                let nextToken = Seq.head tokensAfterArgs
                 if nextToken.``type`` = EQUAL then
                     let tokensAfterEqual =
-                        Seq.tail tokensAfterTarget
+                        Seq.tail tokensAfterArgs
                         |> Seq.skipWhile (isType NEWLINE)
                     match parseExpression tokensAfterEqual with
                     | Ok (Identifier _ as sourceExpr, tokensAfterSource)
                     | Ok (Lateral _ as sourceExpr, tokensAfterSource)
                     | Ok (Binary _ as sourceExpr, tokensAfterSource)
                     | Ok (If _ as sourceExpr, tokensAfterSource) ->
-                        Ok (Let { targetExpr = targetExpr; sourceExpr = sourceExpr}, tokensAfterSource)
+                        if Seq.isEmpty argTokens then
+                            Ok (Let { targetExpr = targetExpr; sourceExpr = sourceExpr}, tokensAfterSource)
+                        else
+                            Ok (Fun { name = targetExpr; args = argTokens; body = [sourceExpr]}, tokensAfterSource)
                     | parseRes ->
                         parseRes
                 else
