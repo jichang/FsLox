@@ -4,6 +4,9 @@ open System
 open System.IO
 open FsLox
 open FsLox.Scanner
+open FsLox.Parser
+open FsLox.Evaluator
+open FsLox.Interpreter
 
 let omitSpaces tokens =
     Seq.filter (fun token -> token.``type`` <> WHITESPACE) tokens
@@ -18,7 +21,7 @@ let main argv =
         match Parser.parse (tokens |> omitSpaces) Seq.empty with
         | Ok ast ->
             Seq.iter (fun expr -> printfn "%A" expr) ast.Exprs
-            let value = Interpreter.interprete Map.empty ast
+            let value = Interpreter.interprete Env.empty ast
             printfn "%A" value
         | Error error ->
             printfn "%A" error

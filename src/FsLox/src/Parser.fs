@@ -12,9 +12,9 @@ module Parser =
           loopBranchExpr: Expr
           elseBranchExpr: Expr option }
     and ForConditionExpr =
-            { initExpr: Expr
-              checkExpr: Expr
-              endExpr: Expr }
+        { initExpr: Expr
+          checkExpr: Expr
+          endExpr: Expr }
     and ForExpr = 
         { conditionExpr: ForConditionExpr
           loopBranchExpr: Expr }

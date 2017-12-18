@@ -1,27 +1,23 @@
 let a = 1;
 let b = a;
 let c = a + 1;
-
-if a = 2 then
-    return
-
 let d =
     if a < c then
         a
     else
         c
 
-e = 0;
-f = 0;
-while e < d do
-    f = f + e
+let f = 0;
+
+while f < d do
+    f = f + 1
 else
-    f = e
+    f = d
 
 for e = 0; e < c; e = e + 1 do
-    f = 1
+    f = f + 1
 
-let f a b =
+let g a b =
     a + b
 
-let sum = f b c
+let sum = g b c

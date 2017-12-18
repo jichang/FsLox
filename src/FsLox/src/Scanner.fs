@@ -21,8 +21,6 @@ module Scanner =
         | COMMENT
         // logic operator tokens
         | EQUAL
-        | NOT
-        | NOT_EQUAL
         | GREATER
         | GREATER_EQUAL
         | LESS
@@ -346,36 +344,6 @@ module Scanner =
                           { line = targetLine
                             lineNum = targetLine.num
                             lineOffset = targetLine.peek + 1 } }
-                let updateRemainingLines =
-                    advance remainingLines token.lexeme.Length
-                    |> Seq.filter isEnd
-                Some (token, updateRemainingLines)
-            | Some ('!', targetLine) ->
-                let peekNext = peek 1 remainingLines
-                let token =
-                    match peekNext with
-                    | Some ('=', targetLine) ->
-                        { ``type`` = NOT_EQUAL
-                          lexeme = "!="
-                          startPosition =
-                              { line = targetLine
-                                lineNum = targetLine.num
-                                lineOffset = targetLine.peek }
-                          endPosition =
-                              { line = targetLine
-                                lineNum = targetLine.num
-                                lineOffset = targetLine.peek + 2 } }
-                    | _ ->
-                        { ``type`` = NOT
-                          lexeme = "!"
-                          startPosition =
-                              { line = targetLine
-                                lineNum = targetLine.num
-                                lineOffset = targetLine.peek }
-                          endPosition =
-                              { line = targetLine
-                                lineNum = targetLine.num
-                                lineOffset = targetLine.peek + 1 } }
                 let updateRemainingLines =
                     advance remainingLines token.lexeme.Length
                     |> Seq.filter isEnd
